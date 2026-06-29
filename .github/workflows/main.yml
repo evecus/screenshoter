@@ -1,39 +1,39 @@
 name: Build ScreenshotTool.exe
 
 on:
-  workflow_dispatch:   # 允许手动触发
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
+          pip install Pillow pywin32 pyinstaller
 
       - name: Build EXE
-        run: |
-          pyinstaller ScreenshotTool.spec
+        run: pyinstaller ScreenshotTool.spec
 
-      - name: Upload artifact (每次构建)
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ScreenshotTool-${{ github.sha }}
           path: dist/ScreenshotTool.exe
           retention-days: 30
 
-      - name: Create Release (仅 tag 触发)
+      - name: Create Release (tag only)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
